@@ -1,0 +1,312 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Strict//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+    <title>Deploy Jitsi Application</title>
+
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dygraph.css">
+
+    <!--<script src="js/dygraph.min.js"></script>-->
+    <script type="text/javascript" src="js/libs/highcharts.js"></script>
+    <script type="text/javascript" src="js/libs/exporting.js"></script>
+    <script type="text/javascript" src="js/libs/jquery-3.1.1.min.js"></script>
+    <script type="text/javascript" src="js/monitoring.js"></script>
+    <script type="text/javascript">
+        var notFinished = true;
+        var getUrlParameter = function getUrlParameter(sParam) {
+            var sPageURL = decodeURIComponent(window.location.search.substring(1)),
+                sURLVariables = sPageURL.split('&'),
+                sParameterName,
+                i;
+
+            for (i = 0; i < sURLVariables.length; i++) {
+                sParameterName = sURLVariables[i].split('=');
+
+                if (sParameterName[0] === sParam) {
+                    return sParameterName[1] === undefined ? true : sParameterName[1];
+                }
+            }
+        };
+
+        function checkCurrentStateTillFinished(timeout) {
+            notFinished = true;
+            var action = function () {
+                $.get("rest/asap/get_current_mcu_state", function (data) {
+                    if (data['finished'] === "true") {
+                        console.log("infinitive loop stopped!!!");
+                        notFinished = false;
+                        return;
+                    }
+                    else
+                        $("div#logs").html('');
+
+                    for (var i = 0; i < Object.keys(data).length; i++) {
+                        try {
+                            var currVal = data["step" + i];
+                            if (currVal) {
+                                $("div#logs").append(currVal + "<br>");
+                            }
+                        } catch (err) {
+                            console.log(err);
+                        }
+                    }
+                });
+                if (notFinished)
+                    setTimeout(action, timeout);
+            };
+            action();
+        }
+        function init() {
+            fillAvailableAgentsCombo();
+            fillAvailableMonitoringMetricCombo();
+
+            // initialize listeners
+            $("button#start").click(function () {
+                $.get("rest/asap/run_mcu_execution?participants=" + $("input#participant_ids").val(), function (data) {
+                    notFinished = false;
+                    var error = data['error'];
+                    if (error) {
+                        console.log(error);
+                    }
+                    else {
+                        console.log("finished:");
+                        console.log(data['public_pod_url'] + " \n" + data['cluster_id'] + " \n" + data['pod_id']);
+                        $("a#mcu_link").attr("href", data['public_pod_url']);
+                        $("input#current_job_id").val(data['job_id']);
+//                        alert(data['public_pod_url'] + " \n" + data['cluster_id'] + " \n" + data['pod_id']);
+//                        fillAvailableAgentsCombo();
+//                        fillAvailableMonitoringMetricCombo();
+                    }
+                    $("a#mcu_link").fadeIn(500);
+
+                    $("button#start").prop('disabled', !error);
+                    $("button#stop").prop('disabled', error != null);
+
+                });
+
+                setTimeout(checkCurrentStateTillFinished(1000), 1000);
+            });
+
+            $("button#stop").click(function () {
+                $.get("rest/asap/stop_mcu_execution?job_id=" + $("input#current_job_id").val(), function (data) {
+                    notFinished = false;
+                    $("div#logs").html('');
+                    var error = data['error'];
+                    console.log("error: " + data['error']);
+                    console.log("message: " + data['message']);
+
+                    if (error) {
+                        $("div#logs").append(data['error']);
+                    }
+                    else {
+                        //$("div#logs").html('');
+                        console.log(data['message']);
+                        $("div#logs").append(data['message']);
+                    }
+
+                    $("button#start").prop('disabled', error === null);
+                    $("button#stop").prop('disabled', error !== null);
+
+
+                    $("span#qoe_component").fadeIn(500);
+                    $("a#mcu_link").fadeOut(500);
+                });
+
+                setTimeout(checkCurrentStateTillFinished(1000), 1000);
+                s
+            });
+
+
+            $("button#stop_selected_pod").click(function () {
+                $.get("rest/asap/stop_single_pod?cluster_name=" + $("select#pods_combo").val().split('|||')[0] +
+                    "&pod_id=" + $("select#pods_combo").val().split('|||')[1], function (data) {
+                    if (data["success"]) {
+                        console.log(data["success"]);
+                        //remove from combo box
+                        $("select#pods_combo option:selected").remove();
+                    }
+                    else {
+                        console.log(data["success"]);
+                    }
+                })
+            });
+
+            // init log
+            var logID = 'log',
+                log = $('<div id="' + logID + '"></div>');
+            $('body').append(log);
+            $('[type*="radio"]').change(function () {
+                var me = $(this);
+                log.html(me.attr('value'));
+            });
+
+            // read header argument 'ips'
+            var ips_to_deploy = getUrlParameter('ips');
+
+            $("input#participant_ids").val(ips_to_deploy);
+
+            // init current kubernetes PODs status
+            function fillAvailableKubernetesPods() {
+                $.get("rest/asap/get_kubernetes_pods", function (data) {
+
+                    var state = data.code;
+
+                    console.log("podi: " + data.resultList);
+                    if (state == 200 && data.resultList.length > 0) {
+                        var list = data.resultList;
+
+                        for (var i = 0; i < list.length; i++) {
+                            $("select#pods_combo").append("<option value=\"" + list[i].id + "\">Pod - " + list[i].name + "</option>");
+                        }
+                    }
+                    else {
+                        console.log(state.error);
+                    }
+                });
+
+            }
+
+            try {
+                console.log("AVAILABLE CLUSTERS!");
+                $.get("rest/asap/get_available_clusters", function (data) {
+                    fillAvailableKubernetesPods();
+                    var state = data.code;
+                    if (state == 200 && data.resultList.length > 0) {
+                        var list = data.resultList;
+                        console.log("neki " + list.length);
+                        $("label#cluster_count").html(" (" + list.length + ")");
+
+                        for (var i = 0; i < list.length; i++) {
+                            $("select#cluster_combo").append("<option value=\"" + list[i].id + "\">" + list[i].name + "</option>");
+                        }
+                    }
+                    else {
+                        console.log(state.error);
+                    }
+                });
+
+
+            } catch (e) {
+                console.log(e);
+            }
+        }
+
+        function fillAvailableMonitoringMetricCombo() {
+            var agentId = "0d17b927149c4021a1e8362e7079ecbd";
+            // fill combo box with available monitoring metrics
+            $.get("http://109.231.122.80:8888/JCatascopia-Web/restAPI/agents/" + agentId + "/availableMetrics", function (data) {
+                var error = data['error'];
+                if (error) {
+                    console.log(error);
+                    alert(error);
+                }
+                else
+                    for (var i = 0; i < data.metrics.length; i++)
+                        $("select#available_monitoring_metrics").append("<option value=\"" + data.metrics[i].metricID + "\">" + (data.metrics[i].group + " - " + data.metrics[i].name) + "</option>");
+
+
+            });
+        }
+
+        function fillAvailableAgentsCombo() {
+            $.get("http://109.231.122.80:8888/JCatascopia-Web/restAPI/agents/", function (data) {
+                var error = data['error'];
+                if (error) {
+                    console.log(error);
+                    alert(error);
+                }
+                else
+                    for (var i = 0; i < data.agents.length; i++)
+                        $("select#available_monitoring_agents").append("<option value=\"" + data.agents[i].agentID + "\">" + (data.agents[i].agentName + " - " + data.agents[i].status) + "</option>");
+            });
+        }
+
+        function showHidePanel(elem) {
+            try {
+                var foundElement = $(elem).parent().find("div.content_panel");//.closest("[name='content_panel']");
+                if (foundElement.is(":visible"))
+                    foundElement.fadeOut(500);
+                else
+                    foundElement.fadeIn(500);
+            } catch (e) {
+                console.log(e);
+            }
+        }
+
+    </script>
+</head>
+<body style="width:80%;">
+<!--<form action="./StartMCUpod" method="post">-->
+<div class="form_border">
+    <a href="#" onclick="showHidePanel(this)">
+        <div class="form_header">MCU APPLICATION DEPLOYMENT</div>
+    </a>
+    <div class="content_panel">
+        <label class="form_label">Available clusters</label><br>
+        <select class="form_control" id="cluster_combo" style="display: inline"></select>
+        <label class="form_label" id="cluster_count"></label><br>
+        <label class="form_label">Current running pods</label>
+        <select class="form_control" id="pods_combo"></select>
+        <button class="casual_form_button" id="stop_selected_pod">Stop selected pod</button>
+        <!--<button class="casual_form_button" onclick="alert('todo')">Stop all pods</button>-->
+        <br>
+        <label class="form_label">List video conference participants IPs delimited with comma</label>
+
+        <input type="text" name="participants" id="participant_ids" class="input-view">
+
+        <input class="check_box" type="checkbox" name="pod_stopper" value="stop_all_pods_on_run"><label
+            class="form_label">Stop existing pods</label>
+        <br>
+        <button class="submit_form_button" id="start">RUN</button>
+        <button class="submit_form_button red_button_addition" style="" id="stop" disabled>STOP</button>
+    </div>
+</div>
+
+<div class="form_border" style="border-left-color: rgb(92, 184, 92);">
+    <a href="#" onclick="showHidePanel(this)">
+        <div class="form_header" style="color: rgb(92, 184, 92);">MONITORING</div>
+    </a>
+    <div class="content_panel" style="display: none">
+        <label class="form_label">Available monitoring agents</label> <select class="form_control"
+                                                                              id="available_monitoring_agents"></select>
+        <label class="form_label">Available monitoring metrics</label> <select class="form_control"
+                                                                               id="available_monitoring_metrics"></select>
+        <button class="submit_form_button green_button_addition" onclick="initMonitoringGraph()">Show graph</button>
+        <div id="monitoring_container" style="min-width: 310px; height: 400px; margin: 0 auto; display:none"></div>
+    </div>
+</div>
+
+<div class="form_border" style="border-left-color: rgb(126,139,143);">
+    <a href="#" onclick="showHidePanel(this)">
+        <div class="form_header" style="color: rgb(126,139,143);">OUTPUT</div>
+    </a>
+
+    <div class="content_panel">
+        <label class="form_label">LOG</label>
+        <div style="border:1px solid darkgray" id="logs">
+        </div>
+        QoE:
+        <span class="star-cb-group" id="qoe_component">
+      <input type="radio" id="rating-5" name="rating" value="5"/><label for="rating-5">5</label>
+      <input type="radio" id="rating-4" name="rating" value="4" checked="checked"/><label for="rating-4">4</label>
+      <input type="radio" id="rating-3" name="rating" value="3"/><label for="rating-3">3</label>
+      <input type="radio" id="rating-2" name="rating" value="2"/><label for="rating-2">2</label>
+      <input type="radio" id="rating-1" name="rating" value="1"/><label for="rating-1">1</label>
+      <input type="radio" id="rating-0" name="rating" value="0" class="star-cb-clear"/><label for="rating-0">0</label>
+        </span>
+    </div>
+</div>
+
+<p><a target="_blank" id="mcu_link" href="http://www.google.com" title="MCU link" style="display: none;">LINK FOR THE
+    MCU</a></p>
+
+<input type="hidden" id="current_job_id" value="">
+
+<script type="text/javascript">
+    init();
+</script>
+
+<p></p>
+</body>
+</html>
