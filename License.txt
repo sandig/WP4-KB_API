@@ -1,0 +1,29 @@
+DO NOT FORGET TO CUSTOMISE THIS LICENCE! AFTER CUSTOMISATION REMOVE THIS LINE! 
+
+
+/* 
+* =================================================================================
+* This file is part of: Name of the Module or Application, e.g. Information Service
+* Release version: 0.2
+* =================================================================================
+* Developer: Sandi Gec, Jernej Trknocy, Matej Cigale, Polona Štefanič, University of Ljubljana, Slovenia
+* Contributor: Francisco Quevedo Fernandez, Cardiff University, UK
+* 
+* The project leading to this application has received funding
+* from the European Union's Horizon 2020 research and innovation
+* programme under grant agreement No 643963.
+*
+* Copyright 2017
+* Contact: Vlado Stankovski (vlado.stankovski@fgg.uni-lj.si)
+* =================================================================================
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you must not use this file except in compliance with the License.
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+*
+* For details see the terms of the License (see attached file: README).
+* The License is also available at http://www.apache.org/licenses/LICENSE-2.0.txt.
+* ================================================================================
+*/
