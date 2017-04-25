@@ -4,7 +4,7 @@ import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.sparql.core.ResultBinding;
 import org.apache.jena.sparql.core.Var;
-import org.ul.entice.webapp.entry.ResultObj;
+import org.ul.asap.webapp.entry.ResultObj;
 
 import java.util.ArrayList;
 import java.util.Iterator;

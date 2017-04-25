@@ -20,7 +20,6 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.ul.asap.webapp.entry.*;
 import org.ul.asap.webapp.mcu.DecisionMakerInput;
-import org.ul.asap.webapp.mcu.KBdummy;
 import org.ul.asap.webapp.mcu.Utilities;
 import org.ul.asap.webapp.mcu.test.ClusterAddressResolver;
 import org.ul.asap.webapp.mcu.test.ConfigProvider;
@@ -28,8 +27,6 @@ import org.ul.asap.webapp.mcu.test.ConfigSelector;
 import org.ul.asap.webapp.util.ASAPFusekiUtils;
 import org.ul.common.monitoring.MonitoringMetric;
 import org.ul.common.rest.IService;
-import org.ul.entice.webapp.client.CassandraDB;
-import org.ul.entice.webapp.entry.client.ResponseObj;
 
 import javax.servlet.ServletException;
 import javax.ws.rs.*;

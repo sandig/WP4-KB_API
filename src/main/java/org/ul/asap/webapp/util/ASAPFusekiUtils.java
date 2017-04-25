@@ -16,14 +16,9 @@ import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.ReasonerVocabulary;
 import org.apache.jena.vocabulary.VCARD;
 import org.joda.time.DateTime;
-import org.ul.asap.webapp.entry.ApplicationComponent;
-import org.ul.asap.webapp.entry.ClusterCredentials;
-import org.ul.asap.webapp.entry.CredentialsType;
+import org.ul.asap.webapp.entry.*;
 import org.ul.common.monitoring.MonitoringMetric;
 import org.ul.common.rest.IService;
-import org.ul.entice.webapp.entry.*;
-import org.ul.entice.webapp.rest.AppContextListener;
-import org.ul.entice.webapp.util.CommonUtils;
 
 import java.io.*;
 import java.net.URL;
@@ -251,5 +246,92 @@ public class ASAPFusekiUtils {
     }
 
     public static final String myNamespacePrefix = "http://entice-project/jernej/test/";
+
+    public static List<ResultObj> getResultObjectListFromResultSet(ResultSet results) {
+        List<ResultObj> resultObjs = new ArrayList<ResultObj>();
+
+        // For each solution in the result set
+        while (results.hasNext()) {
+            QuerySolution qs = results.next();
+            Iterator<Var> varIter = ((ResultBinding) qs).getBinding().vars();
+            String x = null;
+            String r = null;
+            String y = null;
+            while (varIter.hasNext()) {
+                Var var = varIter.next();
+                if (var.getVarName().equals("s")) {
+                    x = ((ResultBinding) qs).getBinding().get(var).toString();
+                    if (x.contains(KB_PREFIX_SHORT)) x = x.replace(KB_PREFIX_SHORT, "");
+                } else if (var.getVarName().equals("p")) r = ((ResultBinding) qs).getBinding().get(var).toString();
+                else if (var.getVarName().equals("o")) {
+                    try {
+                        String resStr = ((ResultBinding) qs).getBinding().get(var).toString();
+                        if (resStr.contains("^^http://www.w3.org/2001/XMLSchema#dateTime"))
+                            y = ((ResultBinding) qs).getBinding().get(var).getLiteral().getValue().toString();
+                        else if (resStr.contains("^^http://www.w3.org/2001/XMLSchema#anyURI"))
+                            y = resStr.replace("^^http://www.w3.org/2001/XMLSchema#anyURI", "").replaceAll("\"", "");
+                        else if (resStr.contains("^^http://www.w3.org/2001/XMLSchema#integer"))
+                            y = resStr.replace("^^http://www.w3.org/2001/XMLSchema#integer", "").replaceAll("\"", "");
+                        else if (resStr.contains("-")) y = resStr.replaceAll("\"", "");
+                        else if (resStr.contains("^^http://www.w3.org/2001/XMLSchema#double"))
+                            y = resStr.replace("^^http://www.w3.org/2001/XMLSchema#double", "").replaceAll("\"", "");
+                        else y = String.valueOf(((ResultBinding) qs).getBinding().get(var).getLiteral().getValue());
+
+                        //additional filter of prefixes cannot be done here!
+                        //if(resStr.startsWith(KB_PREFIX_SHORT)) y = resStr.replaceFirst(KB_PREFIX_SHORT,"");
+                    } catch (Exception e) {
+                        y = ((ResultBinding) qs).getBinding().get(var).toString();
+                    }
+                }
+            }
+
+            resultObjs.add(new ResultObj(x, r, y));
+        }
+
+        return resultObjs;
+    }
+
+    public static <T extends MyEntry> List<T> getAllEntityAttributes(Class<T> clazz, String ontologyURL, String... conditions) {
+        String selectQuery = ASAPFusekiUtils.getAllEntitiesQuery(clazz.getSimpleName(), conditions);
+        QueryExecution qe = QueryExecutionFactory.sparqlService(ontologyURL, selectQuery);
+//        QueryExecution qe = QueryExecutionFactory.sparqlService("http://localhost:3030/entice/query", selectQuery);
+        ResultSet results = qe.execSelect();
+        List<ResultObj> resultObjs = ASAPFusekiUtils.getResultObjectListFromResultSet(results);
+
+        //exception!!
+        if (conditions.length > 0 && (clazz.getSimpleName().equals("ClusterCredentials") ||
+                clazz.getSimpleName().equals("MonitoringMetric")) && resultObjs.size() > 0 && resultObjs.get(0).getS() == null) {
+            for (ResultObj resultObj : resultObjs) {
+                resultObj.setS(conditions[0]);
+            }
+        }
+
+
+        return ASAPFusekiUtils.mapResultObjectListToEntry(clazz, resultObjs);
+    }
+
+    public static <T extends MyEntry> List<T> getAllEntityAttributes(String selectQuery, Class clazz, IService service) {
+
+        QueryExecution qe = QueryExecutionFactory.sparqlService(service.getFusekiQuery(), selectQuery);
+        long startTime = System.currentTimeMillis();
+        ResultSet results = qe.execSelect();
+        System.out.println("SUBSET: " + (System.currentTimeMillis() - startTime) + "ms");
+        List<ResultObj> resultObjs = ASAPFusekiUtils.getResultObjectListFromResultSet(results);
+
+        return ASAPFusekiUtils.mapResultObjectListToEntry(clazz, resultObjs);
+    }
+
+    public static <T extends MyEntry> List<T> mapResultObjectListToEntry(Class<T> clazz, List<ResultObj> resultObjs) {
+        List<T> list = new ArrayList<T>();
+        for (ResultObj resultObj : resultObjs) {
+            ASAPCommonUtils.mapResultObjectToEntry(list, resultObj, clazz);
+        }
+        return list;
+    }
+
+    public static List<MonitoringMetric> getAllEntityAttributes(Class<MonitoringMetric> monitoringMetricClass, String property) {
+        //TODO
+        return null;
+    }
 }
 

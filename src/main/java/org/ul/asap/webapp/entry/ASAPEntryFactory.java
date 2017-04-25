@@ -1,6 +1,5 @@
 package org.ul.asap.webapp.entry;
 
-import org.ul.entice.webapp.entry.*;
 
 public class ASAPEntryFactory {
 

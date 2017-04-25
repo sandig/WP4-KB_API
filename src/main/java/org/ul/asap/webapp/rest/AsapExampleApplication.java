@@ -2,10 +2,10 @@ package org.ul.asap.webapp.rest;
 
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.ul.entice.webapp.rest.GUIService;
-import org.ul.entice.webapp.rest.JSONService;
-import org.ul.entice.webapp.rest.SZTAKIService;
-import org.ul.entice.webapp.rest.SubjectAuthResource;
+import org.secnod.shiro.jaxrs.ShiroExceptionMapper;
+import org.secnod.shiro.jersey.AuthInjectionBinder;
+import org.secnod.shiro.jersey.AuthorizationFilterFeature;
+import org.secnod.shiro.jersey.SubjectFactory;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;

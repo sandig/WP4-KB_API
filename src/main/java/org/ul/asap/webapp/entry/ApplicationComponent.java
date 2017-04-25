@@ -1,7 +1,6 @@
 package org.ul.asap.webapp.entry;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import org.ul.entice.webapp.entry.MyEntry;
 
 import javax.xml.bind.annotation.XmlRootElement;
 

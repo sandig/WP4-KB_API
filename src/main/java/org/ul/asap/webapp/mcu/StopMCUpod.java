@@ -54,7 +54,7 @@ public class StopMCUpod extends HttpServlet {
         //we need the obtain appropriately configured Config object to access the right cluster and be able "start working" in the right Kubernates namespace
         //in our case everything will be done in the "default" Kubernetes namespace (no matter which cluster)
         //TODO: send right credential:
-        Config config = UtilitiesBKP.getKuberConfig(null, "default");
+        Config config = Utilities.getKuberConfig(null, "default");
 //		Config config = Utilities.getKuberConfig(clusterId, "default");
         KubernetesClient kube = new DefaultKubernetesClient(config);
 
@@ -66,7 +66,7 @@ public class StopMCUpod extends HttpServlet {
             newClientForWatchingPods.close();
 
             //delete the pod now (the cluster and namespace where to delete pod are determined by the KubernetesClient object passed to the method)
-            UtilitiesBKP.deletePodByName(kube, podId);
+            Utilities.deletePodByName(kube, podId);
 
 
             while (true) {

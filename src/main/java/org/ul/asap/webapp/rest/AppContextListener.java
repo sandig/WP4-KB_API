@@ -2,8 +2,6 @@ package org.ul.asap.webapp.rest;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.ul.entice.webapp.client.CassandraDB;
-import org.ul.entice.webapp.util.CommonUtils;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -37,10 +35,10 @@ public class AppContextListener implements ServletContextListener {
             // init logger
             logger = Logger.getLogger(this.getClass().getName());
             // init db.property list
-            CommonUtils.initProperties(prop,"asap.properties");
+            //CommonUtils.initProperties(prop,"asap.properties");
             logger.log(Level.INFO, "ASAP properties successfully initialized.");
 
-            new CassandraDB(logger, "jcatascopiadb", prop.getProperty("monitoring.server"), 9042);
+            //new CassandraDB(logger, "jcatascopiadb", prop.getProperty("monitoring.server"), 9042);
 
         } catch (Exception e) {
             e.printStackTrace();

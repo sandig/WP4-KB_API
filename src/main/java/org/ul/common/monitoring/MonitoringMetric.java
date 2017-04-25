@@ -1,6 +1,6 @@
 package org.ul.common.monitoring;
 
-import org.ul.entice.webapp.entry.MyEntry;
+import org.ul.asap.webapp.entry.MyEntry;
 
 public class MonitoringMetric extends MyEntry {
 

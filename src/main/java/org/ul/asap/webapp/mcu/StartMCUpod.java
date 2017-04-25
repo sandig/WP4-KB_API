@@ -64,7 +64,7 @@ public class StartMCUpod extends HttpServlet {
         //get the IP addresses (locations) of the clients that will be participating in the videoconference. This info is passed to Matej's "adaptation
         //module" and it should return the id of the cluster where to start the Pod.
         String clientLocations = request.getParameter("participants");
-        List<String> clientIps = UtilitiesBKP.parseAndValidateClientIPs(clientLocations);
+        List<String> clientIps = Utilities.parseAndValidateClientIPs(clientLocations);
         if (clientIps == null) {
             //then something when wrong while parsing the IPs and validating them --> so we should inform the user immediately - show him web form once again
             out.println("<!DOCTYPE html>");
@@ -110,10 +110,10 @@ public class StartMCUpod extends HttpServlet {
 
                 //we need the obtain appropriately configured Config object to access the right cluster and be able "start working" in the right Kubernates namespace
                 //in our case everything will be done in the "default" Kubernetes namespace (no matter which cluster)
-                Config config = UtilitiesBKP.getKuberConfig(null, "default");
+                Config config = Utilities.getKuberConfig(null, "default");
                 kube = new DefaultKubernetesClient(config);
 
-                String uniqueIdentifierOfPod = UtilitiesBKP.generateKubernetesFriendlyShortUuid(24);
+                String uniqueIdentifierOfPod = Utilities.generateKubernetesFriendlyShortUuid(24);
 
 
                 //WATCHER OF PODs
