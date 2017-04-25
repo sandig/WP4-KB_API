@@ -19,7 +19,6 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.ul.asap.webapp.entry.*;
-import org.ul.asap.webapp.makers.ASAPModelMakerOLD;
 import org.ul.asap.webapp.mcu.DecisionMakerInput;
 import org.ul.asap.webapp.mcu.KBdummy;
 import org.ul.asap.webapp.mcu.Utilities;
@@ -494,7 +493,8 @@ public class SwitchService implements IService {
     // GET - get model in form of a vector
     public List<ASAPModelObj> getModel() throws IOException {
         try {
-            // current solution. TODO ask Jernej and Salman for real data
+            /*
+			// current solution. TODO ask Jernej and Salman for real data
             asapModelObjs.add(new ASAPModelObj(33, 20, 1000, 1, 12, 4));
             asapModelObjs.add(new ASAPModelObj(32, 20, 600, 1, 50, 4));
             asapModelObjs.add(new ASAPModelObj(12, 5, 200, 1, 30, 5));
@@ -510,6 +510,8 @@ public class SwitchService implements IService {
             mm.MetricValues = asapModelObjs;
 
             return asapModelObjs;
+			*/
+			return null;
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -524,10 +526,11 @@ public class SwitchService implements IService {
     // GET - get model in form of a vector
     public List<ASAPModelObj> getDifferential() throws IOException {
         try {
-            ASAPModelMakerOLD mm = new ASAPModelMakerOLD();
-            mm.MetricValues = asapModelObjs;
+           // ASAPModelMakerOLD mm = new ASAPModelMakerOLD();
+           // mm.MetricValues = asapModelObjs;
 
-            return mm.calculateDifferential();
+           // return mm.calculateDifferential();
+		   return null;
         } catch (Exception e) {
             e.printStackTrace();
             return null;
